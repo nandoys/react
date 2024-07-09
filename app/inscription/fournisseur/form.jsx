@@ -1,16 +1,16 @@
 'use client'
 
 import React, { useState } from "react";
-import { Card, Radio, Select } from 'antd';
+import { Card, Radio, Select, Flex, Typography } from 'antd';
 import ReactFlagsSelect from "react-flags-select";
-import './style.css'
 
+const { Title } = Typography;
 
 import { Input } from "../../components/input";
 import { Stepper } from "../../components/stepper/stepper";
 
 const GeneralInfoForm = ({
-  selected, onSelect, name, onChangeName, phone, onChangePhone
+  selected, onSelect, name, onChangeName, address, onChangeAddress, phone, onChangePhone
 }) => {
   
   return (
@@ -32,7 +32,7 @@ const GeneralInfoForm = ({
           id="country"
         />
       </div>
-      <Input labelText="Adresse physique" name="address" type="text" value={phone} onChange={onChangePhone} autocomplete="street-address" />
+      <Input labelText="Adresse physique" name="address" type="text" value={address} onChange={onChangeAddress} autocomplete="street-address" />
       <Input labelText="Numéro de téléphone" name="phone" type="text" value={phone} onChange={onChangePhone} autocomplete="tel" />
     </>
   )
@@ -64,9 +64,13 @@ const ProfileInfoForm = ({rccm, onChangeRccm, tax, onChangeTax, nationalId, onCh
           hoverable
         >
   
-          <p className="flex justify-center mt-20">S2367S2022-ID</p>
+            <br />
+            <Flex justify="center" align="center" vertical className="mt-20">
+              <Title level={3} style={{color: "#fff",}}>2035MAX-6790-1MA</Title>
+            </Flex>
         </Card>
       </div>
+
       <div className="mt-5 mb-5">
         <label htmlFor="profile">Quel Profil pour votre compte ?</label>
         <Radio.Group onChange={onChangeProfile} value={profile} id="profile">
@@ -74,7 +78,9 @@ const ProfileInfoForm = ({rccm, onChangeRccm, tax, onChangeTax, nationalId, onCh
           <Radio value="DAX">Carte DAX</Radio>
         </Radio.Group>
       </div>
+
       <div className="mt-5 mb-5">
+        <label className="block text-sm font-medium leading-6 text-gray-900 mt-2">Forme juridique</label>
         <Select
             //defaultValue="SA"
             value={category}
@@ -85,12 +91,14 @@ const ProfileInfoForm = ({rccm, onChangeRccm, tax, onChangeTax, nationalId, onCh
             options={categories}
         />
       </div>
+
       <Input labelText="Numéro de RCCM" name="rccm" type="text" value={rccm} onChange={onChangeRccm} autocomplete="off" />
       <Input labelText="Numéro d’identification Nationale" name="nationalId" type="text" value={nationalId} onChange={onChangenationalId} autocomplete="off" />
       <Input labelText="Numéro d’impôt" name="tax" type="text" value={tax} onChange={onChangeTax} autocomplete="off" />
+      
+      <label className="block text-sm font-medium leading-6 text-gray-900 mt-2">Catégorie des produits</label>
       <Select
         mode="multiple"
-        placeholder="Inserted are removed"
         value={productCategories}
         onChange={onChangeProductCategories}
         style={{
@@ -120,18 +128,21 @@ const RegisterForm = () => {
       console.log(e, 'here i\'m!!!')
   }
 
-  const OPTIONS = ['Apples', 'Nails', 'Bananas', 'Helicopters'];
+  const OPTIONS = ['Alimentation et Épicerie', 'Animaux de Compagnie', 'Automobiles et Motos', 'Divers', 'Électronique', 
+    'Jouets et Jeux', 'Livres et Papeterie'];
 
   // states of Personnal Component
   const [firstname, setFirstname] = useState("");
   const [lastname, setLastname] = useState("");
   const [country, setCountry] = useState("");
+  const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
 
   const onSelect = (code) => setCountry(code);
   const onChangeFirstname = (e) => setFirstname(e.target.value)
   const onChangeLastname = (e) => setLastname(e.target.value)
   const onChangePhone = (e) => setPhone(e.target.value)
+  const onChangeAddress = (e) => setAddress(e.target.value)
 
   // states of Profile Component
   const [profile, setProfile] = useState("EVOX")
@@ -170,6 +181,7 @@ const RegisterForm = () => {
           selected={country} onSelect={onSelect}
           firstname={firstname} onChangeFirstname={onChangeFirstname}
           lastname={lastname} onChangeLastname={onChangeLastname}
+          address={address} onChangeAddress={onChangeAddress}
           phone={phone} onChangePhone={onChangePhone}
       />,
     },

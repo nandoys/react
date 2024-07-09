@@ -1,8 +1,10 @@
 'use client'
 
 import React, { useState } from "react";
-import { Card, Radio } from 'antd';
+import { Card, Radio, Flex, Typography  } from 'antd';
 import ReactFlagsSelect from "react-flags-select";
+
+const { Title } = Typography;
 
 
 import { Input } from "../components/input";
@@ -39,13 +41,13 @@ const PersonalInfoForm = ({
 }
 
 
-const ProfileInfoForm = ({value, onChange}) => {
+const ProfileInfoForm = ({profile, onChangeProfile}) => {
 
   return (
     <>
       <div className="mt-5 mb-5">
         <label htmlFor="profile">Quel Profil pour votre compte ?</label>
-        <Radio.Group onChange={onChange} value={value} id="profile">
+        <Radio.Group onChange={onChangeProfile} value={profile} id="profile">
           <Radio value="SSID">Carte SSID</Radio>
           <Radio value="BIP">Carte BIP</Radio>
           <Radio value="BINOM">Carte BINOM</Radio>
@@ -55,15 +57,16 @@ const ProfileInfoForm = ({value, onChange}) => {
       <div>
         <Card
           style={{
-            height: 200,
-            backgroundColor: "#000",
-            color: "#fff"
+            height: 250,
+            backgroundImage: `url('/${profile}.jpg')`,
+            backgroundSize: "cover"
           }}
           hoverable
         >
-          <p>Carte {value}</p>
-          <p className="text-center">CLIENTS REGULIERS</p>
-          <p>S2367S2022-ID</p>
+            <br />
+            <Flex justify="center" align="center" vertical className="mt-20">
+              <Title level={3} style={{color: "#fff",}}>S2367S2022-ID</Title>
+            </Flex>
         </Card>
       </div>
     </>
@@ -126,7 +129,7 @@ const RegisterForm = () => {
     },
     {
       title: 'Choix du profil',
-      content: <ProfileInfoForm value={profile} onChange={onChangeProfile} />,
+      content: <ProfileInfoForm profile={profile} onChangeProfile={onChangeProfile} />,
     },
     {
       title: 'Compte',
