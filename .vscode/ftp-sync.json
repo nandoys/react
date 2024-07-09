@@ -1,0 +1,28 @@
+{
+    "remotePath": "./",
+    "host": "ftp.grandmaxinfinity.com",
+    "username": "cp2334563p22_grandap@compte.grandmaxinfinity.com",
+    "password": ")zn*BO+T2.]i",
+    "port": 21,
+    "secure": false,
+    "protocol": "ftp",
+    "uploadOnSave": false,
+    "passive": false,
+    "debug": false,
+    "privateKeyPath": null,
+    "passphrase": null,
+    "agent": null,
+    "allow": [],
+    "ignore": [
+        "\\.vscode",
+        "\\.git",
+        "\\.DS_Store",
+        "node_modules"
+    ],
+    "generatedFiles": {
+        "extensionsToInclude": [
+            ""
+        ],
+        "path": ""
+    }
+}

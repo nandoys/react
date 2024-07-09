@@ -1,0 +1,13 @@
+.card-cover-wrapper {
+    width: 100%;
+    padding-top: 75%; /* Adjust this value to get the desired aspect ratio */
+    position: relative;
+  }
+  
+  .card-cover-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    object-fit: cover;
+  }
+  
