@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, Radio, Flex, Typography  } from 'antd';
 import ReactFlagsSelect from "react-flags-select";
 
@@ -9,6 +9,14 @@ const { Title } = Typography;
 
 import { Input } from "../components/input";
 import { Stepper } from "../components/stepper/stepper";
+
+
+
+type Profile = {
+  id: number,
+  title: string,
+}
+
 
 const PersonalInfoForm = ({
   selected, onSelect, firstname, onChangeFirstname, lastname, onChangeLastname, phone, onChangePhone
@@ -42,15 +50,43 @@ const PersonalInfoForm = ({
 
 
 const ProfileInfoForm = ({profile, onChangeProfile}) => {
+  const [profiles, setProfiles] =  useState<Profile[]>([]);
+
+  const getProfileByType = async() => {
+      try {
+        const response = await fetch(
+          `https://grandmaxinfinity.com/wp-json/gmi/v1/cards?taxonomy=client`,
+          {
+            method: 'GET'
+          }
+        )
+
+        if (response) {
+          const data  = await response.json()
+          setProfiles(data)
+        }
+      } catch (error) {
+        console.log(error)
+      }
+  }
+
+
+  useEffect(()=> {
+    getProfileByType()
+  }, [])
+
+  const selected = profiles.find(p => isNaN(profile) ? p.title == profile : p.id == profile)
 
   return (
     <>
       <div className="mt-5 mb-5">
         <label htmlFor="profile">Quel Profil pour votre compte ?</label>
-        <Radio.Group onChange={onChangeProfile} value={profile} id="profile">
-          <Radio value="SSID">Carte SSID</Radio>
-          <Radio value="BIP">Carte BIP</Radio>
-          <Radio value="BINOM">Carte BINOM</Radio>
+        <Radio.Group onChange={onChangeProfile} value={selected?.id} id="profile">
+          {
+              profiles.map(card => (
+                  <Radio key={card.id} value={card.id}>Carte {card.title}</Radio>
+              ))
+          }
         </Radio.Group>
       </div>
       
@@ -58,7 +94,7 @@ const ProfileInfoForm = ({profile, onChangeProfile}) => {
         <Card
           style={{
             height: 250,
-            backgroundImage: `url('/${profile}.jpg')`,
+            backgroundImage: `url('/${selected?.title ?? 'ssid'}.jpg')`,
             backgroundSize: "cover"
           }}
           hoverable
@@ -76,9 +112,9 @@ const ProfileInfoForm = ({profile, onChangeProfile}) => {
 const AccountInfoForm = ({email, onChangeEmail, passwod, onChangePasswod, confirm, onChangeConfirm}) => {
   return (
     <>
-      <Input labelText="Adresse Email" name="email" type="email" value={email} onChange={onChangeEmail} autocomplete="email" />
-      <Input labelText="Mot de passe" name="password" type="password" value={passwod} onChange={onChangePasswod} autocomplete="new-password" />
-      <Input labelText="Confirmer mot de passe" name="confirmPassword" type="password" value={confirm} onChange={onChangeConfirm} autocomplete="new-password" />
+      <Input labelText="Adresse Email" name="email" type="email" value={email} onChange={onChangeEmail} autoComplete="email" />
+      <Input labelText="Mot de passe" name="password" type="password" value={passwod} onChange={onChangePasswod} autoComplete="new-password" />
+      <Input labelText="Confirmer mot de passe" name="confirmPassword" type="password" value={confirm} onChange={onChangeConfirm} autoComplete="new-password" />
     </>
   )
 }
