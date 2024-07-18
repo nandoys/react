@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from "react";
-import { Card, Radio, Flex, Typography  } from 'antd';
+import { Card, Radio, Flex, Typography, RadioChangeEvent  } from 'antd';
 import ReactFlagsSelect from "react-flags-select";
 
 const { Title } = Typography;
@@ -9,23 +9,21 @@ const { Title } = Typography;
 
 import { Input } from "../components/input";
 import { Stepper } from "../components/stepper/stepper";
+import { getProfileByType } from "./api/service";
+import { CardProfile, CreateCustomerForm } from "./types/interfaces";
 
 
-
-type Profile = {
-  id: number,
-  title: string,
-}
+//const FormContext = createContext();
 
 
 const PersonalInfoForm = ({
-  selected, onSelect, firstname, onChangeFirstname, lastname, onChangeLastname, phone, onChangePhone
+  country, onChangeCountry, firstname, onChangeFirstname, lastname, onChangeLastname, phone, onChangePhone
 }) => {
   
   return (
     <>
-      <Input labelText="Votre prénom" name="firstname" type="text" value={firstname} onChange={onChangeFirstname} autocomplete="given-name" />
-      <Input labelText="Votre nom de famille" name="lastname" type="text" value={lastname} onChange={onChangeLastname} autocomplete="family-name" />
+      <Input labelText="Votre prénom" name="firstname" type="text" value={firstname} onChange={onChangeFirstname} autoComplete="given-name" />
+      <Input labelText="Votre nom de famille" name="lastname" type="text" value={lastname} onChange={onChangeLastname} autoComplete="family-name" />
       
       <div>
           <label htmlFor="rfs-btn" className="block text-sm font-medium leading-6 text-gray-900">
@@ -33,8 +31,8 @@ const PersonalInfoForm = ({
           </label>
       
         <ReactFlagsSelect
-          selected={selected}
-          onSelect={onSelect}
+          selected={country}
+          onSelect={onChangeCountry}
           placeholder="Choisissez votre pays"
           searchPlaceholder="Recherche..."
           searchable
@@ -43,45 +41,31 @@ const PersonalInfoForm = ({
         />
       </div>
 
-      <Input labelText="Numéro de téléphone" name="phone" type="text" value={phone} onChange={onChangePhone} autocomplete="tel" />
+      <Input labelText="Numéro de téléphone" name="phone" type="text" value={phone} onChange={onChangePhone} autoComplete="tel" />
     </>
   )
 }
 
 
-const ProfileInfoForm = ({profile, onChangeProfile}) => {
-  const [profiles, setProfiles] =  useState<Profile[]>([]);
-
-  const getProfileByType = async() => {
-      try {
-        const response = await fetch(
-          `https://grandmaxinfinity.com/wp-json/gmi/v1/cards?taxonomy=client`,
-          {
-            method: 'GET'
-          }
-        )
-
-        if (response) {
-          const data  = await response.json()
-          setProfiles(data)
-        }
-      } catch (error) {
-        console.log(error)
-      }
-  }
+const ProfileInfoForm = ({profile, onChangeProfile} : {profile: CardProfile, onChangeProfile: (e: RadioChangeEvent)=> void }) => {
+  
+  const [profiles, setProfiles] =  useState<CardProfile[]>([]);
+  //const { formData, setFormData } = useContext(FormContext);
 
 
-  useEffect(()=> {
-    getProfileByType()
+  useEffect(() => {
+    getProfileByType(setProfiles)
   }, [])
 
-  const selected = profiles.find(p => isNaN(profile) ? p.title == profile : p.id == profile)
+
+  const selected = profiles.find(p => typeof profile != 'number' ? p.title == profile.title : p.id == profile)
+
 
   return (
     <>
       <div className="mt-5 mb-5">
-        <label htmlFor="profile">Quel Profil pour votre compte ?</label>
-        <Radio.Group onChange={onChangeProfile} value={selected?.id} id="profile">
+        <label htmlFor="profile">Quel Profil pour votre compte ? </label>
+        <Radio.Group onChange={onChangeProfile} value={selected?.id} id="profile" name="profile">
           {
               profiles.map(card => (
                   <Radio key={card.id} value={card.id}>Carte {card.title}</Radio>
@@ -121,35 +105,32 @@ const AccountInfoForm = ({email, onChangeEmail, passwod, onChangePasswod, confir
 
 
 const RegisterForm = () => {
-  const onSubmit = (e) => {
-      e.preventDefault()
-      console.log(e, 'here i\'m!!!')
-  }
 
-  // states of Personnal Component
-  const [firstname, setFirstname] = useState("");
-  const [lastname, setLastname] = useState("");
-  const [country, setCountry] = useState("");
-  const [phone, setPhone] = useState("");
+  const [formData, setFormData] = useState<CreateCustomerForm>({    
+    firstname: '',
+    lastname: '',
+    username: '',
+    country: '',
+    phone: '',
+    profile: {
+      id: 5499, // to change
+      title: 'SSID'
+    },
+    email: '',
+    password: ''
+  });
+  
+  const handleChange = (e) => {
+    const hasTargetProperty :boolean = Object.hasOwn(e, 'target')
+    setFormData({
+      ...formData,
+      [hasTargetProperty ? e.target.name : 'country']: hasTargetProperty ? e.target.value : e,
+      'username': `${formData.firstname}.${formData.lastname}`
+    });
+  };
 
-  const onSelect = (code) => setCountry(code);
-  const onChangeFirstname = (e) => setFirstname(e.target.value)
-  const onChangeLastname = (e) => setLastname(e.target.value)
-  const onChangePhone = (e) => setPhone(e.target.value)
 
-  // states of Profile Component
-  const [profile, setProfile] = useState("SSID")
-
-  const onChangeProfile = (e) => setProfile(e.target.value);
-
-
-  // states of Account Component
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
   const [confirm, setConfirm] = useState("")
-
-  const onChangeEmail = (e) => setEmail(e.target.value)
-  const onChangePassword = (e) => setPassword(e.target.value)
   const onChangeConfirm = (e) => setConfirm(e.target.value)
 
 
@@ -157,44 +138,33 @@ const RegisterForm = () => {
     {
       title: 'Infos personnelles',
       content: <PersonalInfoForm 
-          selected={country} onSelect={onSelect}
-          firstname={firstname} onChangeFirstname={onChangeFirstname}
-          lastname={lastname} onChangeLastname={onChangeLastname}
-          phone={phone} onChangePhone={onChangePhone}
+          country={formData.country} onChangeCountry={handleChange}
+          firstname={formData.firstname} onChangeFirstname={handleChange}
+          lastname={formData.lastname} onChangeLastname={handleChange}
+          phone={formData.phone} onChangePhone={handleChange}
       />,
     },
     {
       title: 'Choix du profil',
-      content: <ProfileInfoForm profile={profile} onChangeProfile={onChangeProfile} />,
+      content: <ProfileInfoForm profile={formData.profile} onChangeProfile={handleChange} />,
     },
     {
       title: 'Compte',
       content: <AccountInfoForm
-            email={email} onChangeEmail={onChangeEmail}
-            passwod={password} onChangePasswod={onChangePassword}
+            email={formData.email} onChangeEmail={handleChange}
+            passwod={formData.password} onChangePasswod={handleChange}
             confirm={confirm} onChangeConfirm={onChangeConfirm}
        />,
     },
   ];
 
-  const data = {
-    firstname: firstname,
-    lastname: lastname,
-    country: country,
-    phone: phone,
-    profile: profile,
-    email: email,
-    pwd: password
-  }
-  
-
   return (
-      <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-        <form className="space-y-1" action="#" method="POST" onSubmit={onSubmit}>
+    <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
+      <form className="space-y-1" action="#" method="POST">
 
-          <Stepper steps={steps} data={data} />
-        </form>
-      </div>
+        <Stepper steps={steps} formData={formData} />
+      </form>
+    </div>
   )
 }
 

@@ -1,6 +1,7 @@
+/* eslint-disable react/no-unescaped-entities */
 'use client'
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, Radio, Select, Flex, Typography } from 'antd';
 import ReactFlagsSelect from "react-flags-select";
 
@@ -8,14 +9,18 @@ const { Title } = Typography;
 
 import { Input } from "../../components/input";
 import { Stepper } from "../../components/stepper/stepper";
+import { getProductsCategories } from "../api/service";
+
+import { CardProfile, ProductCategory } from "../types/interfaces";
+
 
 const GeneralInfoForm = ({
-  selected, onSelect, name, onChangeName, address, onChangeAddress, phone, onChangePhone
+  country, onChangeCountry, name, onChangeName, address, onChangeAddress, phone, onChangePhone
 }) => {
   
   return (
     <>
-      <Input labelText="Nom de votre entreprise" name="entreprise" type="text" value={name} onChange={onChangeName} autocomplete="off" />
+      <Input labelText="Nom de votre entreprise" name="entreprise" type="text" value={name} onChange={onChangeName} autoComplete="off" />
 
       <div>
           <label htmlFor="rfs-btn" className="block text-sm font-medium leading-6 text-gray-900">
@@ -23,8 +28,8 @@ const GeneralInfoForm = ({
           </label>
       
         <ReactFlagsSelect
-          selected={selected}
-          onSelect={onSelect}
+          selected={country}
+          onSelect={onChangeCountry}
           placeholder="Choisissez votre pays"
           searchPlaceholder="Recherche..."
           searchable
@@ -32,15 +37,22 @@ const GeneralInfoForm = ({
           id="country"
         />
       </div>
-      <Input labelText="Adresse physique" name="address" type="text" value={address} onChange={onChangeAddress} autocomplete="street-address" />
-      <Input labelText="Numéro de téléphone" name="phone" type="text" value={phone} onChange={onChangePhone} autocomplete="tel" />
+      <Input labelText="Adresse physique" name="address" type="text" value={address} onChange={onChangeAddress} autoComplete="street-address" />
+      <Input labelText="Numéro de téléphone" name="phone" type="text" value={phone} onChange={onChangePhone} autoComplete="tel" />
     </>
   )
 }
 
 
 const ProfileInfoForm = ({rccm, onChangeRccm, tax, onChangeTax, nationalId, onChangenationalId, category, onChangeCategory,
-  profile, onChangeProfile, productCategories, productCategoriesOptions, onChangeProductCategories}) => {
+  profile, onChangeProfile, productCategoriesOptions, onChangeProductCategories}) => {
+
+  const [productCategories, setProductCategories] = useState<ProductCategory[]>([]);
+  const [profiles, setProfiles] =  useState<CardProfile[]>([]);
+
+  useEffect(() => {
+    getProductsCategories()
+  }, [])
 
   const categories = [
     {value: 'SA', label: 'SA'},
@@ -92,9 +104,9 @@ const ProfileInfoForm = ({rccm, onChangeRccm, tax, onChangeTax, nationalId, onCh
         />
       </div>
 
-      <Input labelText="Numéro de RCCM" name="rccm" type="text" value={rccm} onChange={onChangeRccm} autocomplete="off" />
-      <Input labelText="Numéro d’identification Nationale" name="nationalId" type="text" value={nationalId} onChange={onChangenationalId} autocomplete="off" />
-      <Input labelText="Numéro d’impôt" name="tax" type="text" value={tax} onChange={onChangeTax} autocomplete="off" />
+      <Input labelText="Numéro de RCCM" name="rccm" type="text" value={rccm} onChange={onChangeRccm} autoComplete="off" />
+      <Input labelText="Numéro d’identification Nationale" name="nationalId" type="text" value={nationalId} onChange={onChangenationalId} autoComplete="off" />
+      <Input labelText="Numéro d’impôt" name="tax" type="text" value={tax} onChange={onChangeTax} autoComplete="off" />
       
       <label className="block text-sm font-medium leading-6 text-gray-900 mt-2">Catégorie des produits</label>
       <Select
@@ -114,9 +126,9 @@ const ProfileInfoForm = ({rccm, onChangeRccm, tax, onChangeTax, nationalId, onCh
 const AccountInfoForm = ({email, onChangeEmail, passwod, onChangePasswod, confirm, onChangeConfirm}) => {
   return (
     <>
-      <Input labelText="Adresse Email" name="email" type="email" value={email} onChange={onChangeEmail} autocomplete="email" />
-      <Input labelText="Mot de passe" name="password" type="password" value={passwod} onChange={onChangePasswod} autocomplete="new-password" />
-      <Input labelText="Confirmer mot de passe" name="confirmPassword" type="password" value={confirm} onChange={onChangeConfirm} autocomplete="new-password" />
+      <Input labelText="Adresse Email" name="email" type="email" value={email} onChange={onChangeEmail} autoComplete="email" />
+      <Input labelText="Mot de passe" name="password" type="password" value={passwod} onChange={onChangePasswod} autoComplete="new-password" />
+      <Input labelText="Confirmer mot de passe" name="confirmPassword" type="password" value={confirm} onChange={onChangeConfirm} autoComplete="new-password" />
     </>
   )
 }
@@ -127,6 +139,8 @@ const RegisterForm = () => {
       e.preventDefault()
       console.log(e, 'here i\'m!!!')
   }
+
+  
 
   const OPTIONS = ['Alimentation et Épicerie', 'Animaux de Compagnie', 'Automobiles et Motos', 'Divers', 'Électronique', 
     'Jouets et Jeux', 'Livres et Papeterie'];
@@ -153,7 +167,6 @@ const RegisterForm = () => {
   const [nationalId, setNationalId] = useState("")
   const [tax, setTax] = useState("")
   const [category, setCategory] = useState("SA")
-  const [productCategories, setProductCategories] = useState([]);
 
   const onChangeRccm = (e) => setRccm(e.target.value)
   const onChangeNationalId = (e) => setNationalId(e.target.value)
@@ -161,7 +174,7 @@ const RegisterForm = () => {
   const onChangeCategory = (value) => setCategory(value);
 
 
-  const filteredOptions = OPTIONS.filter((o) => !productCategories.includes(o));
+  const filteredOptions = OPTIONS.filter((o) => ![''].includes(o));
 
 
   // states of Account Component
@@ -178,9 +191,8 @@ const RegisterForm = () => {
     {
       title: 'Général',
       content: <GeneralInfoForm 
-          selected={country} onSelect={onSelect}
-          firstname={firstname} onChangeFirstname={onChangeFirstname}
-          lastname={lastname} onChangeLastname={onChangeLastname}
+          country={country} onChangeCountry={onSelect}
+          name={firstname} onChangeName={onChangeFirstname}
           address={address} onChangeAddress={onChangeAddress}
           phone={phone} onChangePhone={onChangePhone}
       />,
@@ -193,9 +205,7 @@ const RegisterForm = () => {
         category={category} onChangeCategory={onChangeCategory}
         rccm={rccm} onChangeRccm={onChangeRccm}
         nationalId={nationalId} onChangenationalId={onChangeNationalId}
-        tax={tax} onChangeTax={onChangeTax}
-        productCategories={productCategories}
-        onChangeProductCategories={setProductCategories}
+        tax={tax} onChangeTax={onChangeTax} onChangeProductCategories={onChangeNationalId}
         productCategoriesOptions={filteredOptions.map((item) => ({
           value: item,
           label: item,
@@ -227,7 +237,7 @@ const RegisterForm = () => {
       <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
         <form className="space-y-1" action="#" method="POST" onSubmit={onSubmit}>
 
-          <Stepper steps={steps} data={data} />
+          <Stepper steps={steps} formData={undefined} />
         </form>
       </div>
   )

@@ -2,9 +2,10 @@
 
 import React, { useState } from 'react';
 import { Button, message, Steps, theme } from 'antd';
+import { createCustomerApi } from '../../inscription/api/endpoints';
 
 
-const Stepper = ({steps, data}) => {
+const Stepper = ({steps, formData}) => {
   const { token } = theme.useToken();
   const [current, setCurrent] = useState(0);
   
@@ -16,9 +17,22 @@ const Stepper = ({steps, data}) => {
     setCurrent(current - 1);
   };
 
-  const done = () => {
-    console.log(data)
+  const done = async () => {
+    console.log(formData)
     message.success('Inscription terminée!')
+    try {
+      const response = await fetch(createCustomerApi, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+      const result = await response.json();
+      console.log('Success:', result);
+    } catch (error) {
+      console.error('Error:', error);
+    }
   }
 
   const items = steps.map((item) => ({
@@ -54,7 +68,7 @@ const Stepper = ({steps, data}) => {
         )}
 
         {current === steps.length - 1 && (
-          <Button type="primary" onClick={done}>
+          <Button type="primary" onClick={done}> 
             Terminer
           </Button>
         )}
