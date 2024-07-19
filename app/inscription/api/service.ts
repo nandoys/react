@@ -20,7 +20,7 @@ export const getProfileByType = async(setProfiles: React.Dispatch<React.SetState
     }
 }
 
-export const getProductsCategories = async() => {
+export const getProductsCategories = async(setProductCategories: React.Dispatch<React.SetStateAction<ProductCategory[]>>) => {
     const username = 'ck_ddb764d6ebae1ec7998de3648f3eacfb15934f3a';
     const password = 'cs_e21dd71db48b6dd4f709e2d2a1c9690ae2c89903';
 
@@ -40,8 +40,8 @@ export const getProductsCategories = async() => {
       )
 
       if (response) {
-        const data:ProductCategory  = await response.json()
-        console.log(data)
+        const data:ProductCategory[]  = await response.json()
+        setProductCategories(data)
       }
     } catch (error) {
       console.log(error)
