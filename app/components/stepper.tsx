@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Button, message, Steps, theme } from 'antd';
-import { createCustomerApi } from '../../inscription/api/endpoints';
+import { createCustomerApi } from '../api/endpoints';
 
 
 const Stepper = ({steps, formData}) => {

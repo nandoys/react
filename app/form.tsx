@@ -7,8 +7,8 @@ import ReactFlagsSelect from "react-flags-select";
 const { Title } = Typography;
 
 
-import { Input } from "../components/input";
-import { Stepper } from "../components/stepper/stepper";
+import { Input } from "./components/input";
+import { Stepper } from "./components/stepper";
 import { getProfileByType } from "./api/service";
 import { CardProfile, CreateCustomerForm } from "./types/interfaces";
 
