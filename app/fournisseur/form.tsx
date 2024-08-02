@@ -9,7 +9,7 @@ const { Title } = Typography;
 
 import { Input } from "../components/input";
 import { Stepper } from "../components/stepper";
-import { getProductsCategories } from "../api/service";
+import { getProductsCategories, getProfileByType } from "../api/service";
 
 import { CardProfile, CreateSupplierForm, ProductCategory } from "../types/interfaces";
 
@@ -49,6 +49,11 @@ const ProfileInfoForm = ({rccm, onChangeRccm, tax, onChangeTax, nationalId, onCh
 
   const [productCategories, setProductCategories] = useState<ProductCategory[]>([]);
   const [profiles, setProfiles] =  useState<CardProfile[]>([]);
+
+  useEffect(() => {
+    getProfileByType(setProfiles, 'fournisseur')
+  }, [])
+
   
   const categoriesOptions = productCategories.map((category) => ({
     value: category.id,
@@ -68,6 +73,8 @@ const ProfileInfoForm = ({rccm, onChangeRccm, tax, onChangeTax, nationalId, onCh
     {value: 'PERSONNE PHYSIQUE', label: 'PERSONNES PHYSIQUES AVEC N° d’IMPÔTS'},
   ]
 
+  const selected = profiles.find(p => typeof profile != 'number' ? p.title == profile.title : p.id == profile)
+
   return (
     <>
       <div className="mt-5">
@@ -75,7 +82,7 @@ const ProfileInfoForm = ({rccm, onChangeRccm, tax, onChangeTax, nationalId, onCh
           style={{
             height: 250,
             color: "#fff",
-            backgroundImage: `url('/${profile}.jpg')`,
+            backgroundImage: `url('/${selected?.title.toLowerCase() ?? 'dax'}.jpg')`,
             backgroundSize: "cover"
           }}
           hoverable
@@ -90,9 +97,12 @@ const ProfileInfoForm = ({rccm, onChangeRccm, tax, onChangeTax, nationalId, onCh
 
       <div className="mt-5 mb-5">
         <label htmlFor="profile">Quel Profil pour votre compte ?</label>
-        <Radio.Group onChange={onChangeProfile} value={profile} id="profile">
-          <Radio value="EVOX">Carte EVOX</Radio>
-          <Radio value="DAX">Carte DAX</Radio>
+        <Radio.Group onChange={onChangeProfile} value={selected?.id} id="profile" name="profile">
+          {
+            profiles.map(card => (
+                <Radio key={card.id} value={card.id}>Carte {card.title}</Radio>
+            ))
+          }
         </Radio.Group>
       </div>
 
@@ -151,8 +161,8 @@ const RegisterForm = () => {
     address: '',
     phone: '',
     profile: {
-      id: 5499, // to change
-      title: 'SSID'
+      id: 5503, // to change
+      title: 'DAX'
     },
     legalStatus: '',
     businessRegister: '',
@@ -164,7 +174,7 @@ const RegisterForm = () => {
   });
 
   const handleChange = (e) => {
-    console.log(e)
+
     const hasTargetProperty :boolean = Object.hasOwn(e, 'target')
     setFormData({
       ...formData,

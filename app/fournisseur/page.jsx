@@ -8,11 +8,11 @@ export default function Fournisseur() {
             <div className="sm:mx-auto sm:w-full sm:max-w-sm">
             
                 <h2 className="mt-5 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
-                    Ouvir un nouveau compte
+                    Ouvrir un nouveau compte
                 </h2>
                 <p className=" text-center text-sm text-gray-500">
                     Vous êtes un client ?{' '}
-                    <Link href="/inscription" className="font-semibold leading-6 text-indigo-600 hover:text-indigo-500">
+                    <Link href="/" className="font-semibold leading-6 text-indigo-600 hover:text-indigo-500">
                     Rejoindre par ici
                     </Link>
                 </p>

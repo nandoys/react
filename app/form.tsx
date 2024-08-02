@@ -54,7 +54,7 @@ const ProfileInfoForm = ({profile, onChangeProfile} : {profile: CardProfile, onC
 
 
   useEffect(() => {
-    getProfileByType(setProfiles)
+    getProfileByType(setProfiles, 'client')
   }, [])
 
 
@@ -78,7 +78,7 @@ const ProfileInfoForm = ({profile, onChangeProfile} : {profile: CardProfile, onC
         <Card
           style={{
             height: 250,
-            backgroundImage: `url('/${selected?.title ?? 'ssid'}.jpg')`,
+            backgroundImage: `url('/${selected?.title.toLowerCase() ?? 'ssid'}.jpg')`,
             backgroundSize: "cover"
           }}
           hoverable

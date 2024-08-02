@@ -2,10 +2,10 @@
 import { CardProfile, ProductCategory } from "../types/interfaces"
 import { getCardsProfileApi, getProductsCategoriesApi } from "./endpoints"
 
-export const getProfileByType = async(setProfiles: React.Dispatch<React.SetStateAction<CardProfile[]>>) => {
+export const getProfileByType = async(setProfiles: React.Dispatch<React.SetStateAction<CardProfile[]>>, taxonomy: string) => {
     try {
       const response = await fetch(
-        getCardsProfileApi,
+        getCardsProfileApi+taxonomy,
         {
           method: 'GET'
         }
