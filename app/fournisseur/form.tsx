@@ -13,6 +13,15 @@ import { getProductsCategories, getProfileByType } from "../api/service";
 
 import { CardProfile, CreateSupplierForm, ProductCategory } from "../types/interfaces";
 
+const legalStatusOptions = [
+  {value: 'SA', label: 'SA'},
+  {value: 'SARLU', label: 'SARLU'},
+  {value: 'SARL', label: 'SARL'},
+  {value: 'ÉTABLISSEMENT', label: 'ÉTABLISSEMENT'},
+  {value: 'ASBL & ONG', label: 'ASBL & ONG'},
+  {value: 'PERSONNE PHYSIQUE', label: 'PERSONNES PHYSIQUES AVEC N° d’IMPÔTS'},
+]
+
 
 const GeneralInfoForm = ({
   country, onChangeCountry, name, onChangeName, address, onChangeAddress, phone, onChangePhone
@@ -63,15 +72,6 @@ const ProfileInfoForm = ({rccm, onChangeRccm, tax, onChangeTax, nationalId, onCh
   useEffect(() => {
     getProductsCategories(setProductCategories)
   }, [])
-
-  const legalStatusOptions = [
-    {value: 'SA', label: 'SA'},
-    {value: 'SARLU', label: 'SARLU'},
-    {value: 'SARL', label: 'SARL'},
-    {value: 'ÉTABLISSEMENT', label: 'ÉTABLISSEMENT'},
-    {value: 'ASBL & ONG', label: 'ASBL & ONG'},
-    {value: 'PERSONNE PHYSIQUE', label: 'PERSONNES PHYSIQUES AVEC N° d’IMPÔTS'},
-  ]
 
   const selected = profiles.find(p => typeof profile != 'number' ? p.title == profile.title : p.id == profile)
 
@@ -174,11 +174,12 @@ const RegisterForm = () => {
   });
 
   const handleChange = (e) => {
+    const isLegalStatus = legalStatusOptions.some((option, index) => option.value == e)
 
     const hasTargetProperty :boolean = Object.hasOwn(e, 'target')
     setFormData({
       ...formData,
-      [hasTargetProperty ? e.target.name : 'legalStatus']: hasTargetProperty ? e.target.value : e,
+      [hasTargetProperty ? e.target.name : isLegalStatus ? 'legalStatus' : 'country']: hasTargetProperty ? e.target.value : e,
       'username': `${formData.name}.${formData.legalStatus}`
     });
   };
@@ -219,6 +220,7 @@ const RegisterForm = () => {
         }))}*/
       />
     },
+
     {
       title: 'Compte',
       content: <AccountInfoForm
@@ -236,7 +238,7 @@ const RegisterForm = () => {
       <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
         <form className="space-y-1" action="#" method="POST">
 
-          <Stepper steps={steps} formData={undefined} />
+          <Stepper steps={steps} formData={formData} />
         </form>
       </div>
   )

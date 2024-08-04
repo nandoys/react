@@ -20,6 +20,7 @@ const Stepper = ({steps, formData}) => {
   const done = async () => {
     console.log(formData)
     message.success('Inscription terminée!')
+    /*
     try {
       const response = await fetch(createCustomerApi, {
         method: 'POST',
@@ -33,6 +34,7 @@ const Stepper = ({steps, formData}) => {
     } catch (error) {
       console.error('Error:', error);
     }
+    */
   }
 
   const items = steps.map((item) => ({
