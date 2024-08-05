@@ -1,11 +1,15 @@
 /* eslint-disable react/no-unescaped-entities */
 'use client'
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card, Radio, Select, Flex, Typography } from 'antd';
+import { InboxOutlined } from '@ant-design/icons';
+import type { UploadProps } from 'antd';
+import { message, Upload } from 'antd';
 import ReactFlagsSelect from "react-flags-select";
 
 const { Title } = Typography;
+const { Dragger } = Upload;
 
 import { Input } from "../components/input";
 import { Stepper } from "../components/stepper";
@@ -21,6 +25,41 @@ const legalStatusOptions = [
   {value: 'ASBL & ONG', label: 'ASBL & ONG'},
   {value: 'PERSONNE PHYSIQUE', label: 'PERSONNES PHYSIQUES AVEC N° d’IMPÔTS'},
 ]
+
+let categoriesID = new Set<number>()
+
+const props: UploadProps = {
+  name: 'file',
+  accept: 'image/png, image/jpeg, image/jpg, application/pdf',
+  maxCount: 3,
+  multiple: true,
+  locale: {
+    uploadError: "Erreur de chargement",
+    removeFile: "Retirer"
+  },
+  //action: 'https://660d2bd96ddfa2943b33731c.mockapi.io/api/upload',
+  onChange(info) {
+    const { status } = info.file;
+    if (status === 'done') {
+      message.success(`${info.file.name} chargement réussi.`);
+    } else if (status === 'error') {
+      message.error(`${info.file.name} chargement échoué.`);
+    }
+  },
+  onDrop(e) {
+    const file = e.dataTransfer.files[0]
+    const accept = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf']
+    if(!accept.some((format, index) => format == file.type)) {
+      message.error(`${file.name} format invalide.`);
+    }
+  },
+  beforeUpload(file, fileList) {
+    if((file.size / 1048576) >= 5) {
+      message.error(`${file.name} fichier volumineux.`);
+      return Upload.LIST_IGNORE
+    }
+  },
+};
 
 
 const GeneralInfoForm = ({
@@ -54,7 +93,7 @@ const GeneralInfoForm = ({
 
 
 const ProfileInfoForm = ({rccm, onChangeRccm, tax, onChangeTax, nationalId, onChangenationalId, legalStatus, onChangeLegalStatus,
-  profile, onChangeProfile, onChangeProductCategories}) => {
+  profile, onChangeProfile, selectedCategories, onChangeProductCategories}) => {
 
   const [productCategories, setProductCategories] = useState<ProductCategory[]>([]);
   const [profiles, setProfiles] =  useState<CardProfile[]>([]);
@@ -69,7 +108,15 @@ const ProfileInfoForm = ({rccm, onChangeRccm, tax, onChangeTax, nationalId, onCh
     label: category.name,
   }))
 
-  useEffect(() => {
+
+
+  useEffect(()=>{
+    productCategories.forEach((category) => {
+      categoriesID.add(category.id)
+    })
+  }, [productCategories])
+
+  useMemo(() => {
     getProductsCategories(setProductCategories)
   }, [])
 
@@ -96,7 +143,7 @@ const ProfileInfoForm = ({rccm, onChangeRccm, tax, onChangeTax, nationalId, onCh
       </div>
 
       <div className="mt-5 mb-5">
-        <label htmlFor="profile">Quel Profil pour votre compte ?</label>
+        <label>Quel Profil pour votre compte ?</label>
         <Radio.Group onChange={onChangeProfile} value={selected?.id} id="profile" name="profile">
           {
             profiles.map(card => (
@@ -126,12 +173,29 @@ const ProfileInfoForm = ({rccm, onChangeRccm, tax, onChangeTax, nationalId, onCh
       <label className="block text-sm font-medium leading-6 text-gray-900 mt-2">Catégorie des produits</label>
       <Select
         mode="multiple"
+        className="mb-2"
         onChange={onChangeProductCategories}
         style={{
           width: '100%',
         }}
         options={categoriesOptions}
+        notFoundContent={
+          <div>Aucune catégorie trouvée</div>
+        }
+        aria-readonly
+        value={selectedCategories}
       />
+
+      <Dragger {...props}>
+        <p className="ant-upload-drag-icon">
+          <InboxOutlined />
+        </p>
+        <p className="ant-upload-text">Cliquer ou déposer des fichiers dans cette zone</p>
+        <p className="ant-upload-hint">
+          Vous pouvez selectionner un ou plusieurs fichiers au format : PDF | JPG | JPEG  |PNG
+          <br />Taille Maximal: 5Mo
+        </p>
+      </Dragger>
       
     </>
   )
@@ -174,26 +238,33 @@ const RegisterForm = () => {
   });
 
   const handleChange = (e) => {
-    const isLegalStatus = legalStatusOptions.some((option, index) => option.value == e)
+
+    let isLegalStatus = false
+    let isCategories = false
 
     const hasTargetProperty :boolean = Object.hasOwn(e, 'target')
+
+    if(!hasTargetProperty) {
+      isLegalStatus = legalStatusOptions.some((option, index) => option.value == e)
+      
+      isCategories = categoriesID.has(parseInt(e))
+    }
+
     setFormData({
       ...formData,
-      [hasTargetProperty ? e.target.name : isLegalStatus ? 'legalStatus' : 'country']: hasTargetProperty ? e.target.value : e,
+      [hasTargetProperty ? 
+        e.target.name : 
+        isLegalStatus ? 'legalStatus' : 
+        isCategories ? 'categories':
+        'country'
+      ]: hasTargetProperty ? e.target.value : e,     
       'username': `${formData.name}.${formData.legalStatus}`
     });
   };
 
   const [confirm, setConfirm] = useState("")
   const onChangeConfirm = (e) => setConfirm(e.target.value)
-  
-
-  const OPTIONS = ['Alimentation et Épicerie', 'Animaux de Compagnie', 'Automobiles et Motos', 'Divers', 'Électronique', 
-    'Jouets et Jeux', 'Livres et Papeterie'];
-
-
-  const filteredOptions = OPTIONS.filter((o) => ![''].includes(o));
-
+ 
   const steps = [
     {
       title: 'Général',
@@ -213,11 +284,7 @@ const RegisterForm = () => {
         rccm={formData.businessRegister} onChangeRccm={handleChange}
         nationalId={formData.nationalID} onChangenationalId={handleChange}
         tax={formData.taxID} onChangeTax={handleChange}
-        onChangeProductCategories={handleChange}
-        /*productCategoriesOptions={filteredOptions.map((item) => ({
-          value: item,
-          label: item,
-        }))}*/
+        selectedCategories={formData.categories} onChangeProductCategories={handleChange}
       />
     },
 
