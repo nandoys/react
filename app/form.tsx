@@ -13,9 +13,6 @@ import { getProfileByType } from "./api/service";
 import { CardProfile, CreateCustomerForm } from "./types/interfaces";
 
 
-//const FormContext = createContext();
-
-
 const PersonalInfoForm = ({
   country, onChangeCountry, firstname, onChangeFirstname, lastname, onChangeLastname, phone, onChangePhone
 }) => {
@@ -50,11 +47,27 @@ const PersonalInfoForm = ({
 const ProfileInfoForm = ({profile, onChangeProfile} : {profile: CardProfile, onChangeProfile: (e: RadioChangeEvent)=> void }) => {
   
   const [profiles, setProfiles] =  useState<CardProfile[]>([]);
-  //const { formData, setFormData } = useContext(FormContext);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
 
   useEffect(() => {
-    getProfileByType(setProfiles, 'client')
+    const cachedData = sessionStorage.getItem('customer-profile-card');
+    if (cachedData) {
+      setProfiles(JSON.parse(cachedData));
+      setLoading(false);
+    } else {
+      getProfileByType('client')
+        .then((data) => {
+          sessionStorage.setItem('customer-profile-card', JSON.stringify(data));
+          setProfiles(data);
+          setLoading(false);
+        })
+        .catch((error) => {
+          setError(error);
+          setLoading(false);
+        });
+    }
   }, [])
 
 
@@ -121,13 +134,19 @@ const RegisterForm = () => {
   });
   
   const handleChange = (e) => {
-    const hasTargetProperty :boolean = Object.hasOwn(e, 'target')
     setFormData({
       ...formData,
-      [hasTargetProperty ? e.target.name : 'country']: hasTargetProperty ? e.target.value : e,
-      'username': `${formData.firstname}.${formData.lastname}`
+      [e.target.name]: e.target.value,
+      'username': `${formData.email}`
     });
   };
+
+  const handleCountryChange = (e: string) => {
+    setFormData({
+      ...formData,
+      'country': e
+     });
+  }
 
 
   const [confirm, setConfirm] = useState("")
@@ -138,7 +157,7 @@ const RegisterForm = () => {
     {
       title: 'Infos personnelles',
       content: <PersonalInfoForm 
-          country={formData.country} onChangeCountry={handleChange}
+          country={formData.country} onChangeCountry={handleCountryChange}
           firstname={formData.firstname} onChangeFirstname={handleChange}
           lastname={formData.lastname} onChangeLastname={handleChange}
           phone={formData.phone} onChangePhone={handleChange}

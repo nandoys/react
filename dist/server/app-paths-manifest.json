@@ -1,5 +1,6 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
   "/fournisseur/page": "app/fournisseur/page.js",
-  "/fournisseur/icon.png/route": "app/fournisseur/icon.png/route.js"
+  "/page": "app/page.js",
+  "/fournisseur/icon.png/route": "app/fournisseur/icon.png/route.js",
+  "/icon.png/route": "app/icon.png/route.js"
 }

@@ -1,7 +1,7 @@
 /* eslint-disable react/no-unescaped-entities */
 'use client'
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback, memo } from "react";
 import { Card, Radio, Select, Flex, Typography } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
 import type { UploadProps } from 'antd';
@@ -95,64 +95,9 @@ const GeneralInfoForm = ({
 const ProfileInfoForm = ({rccm, onChangeRccm, tax, onChangeTax, nationalId, onChangenationalId, legalStatus, onChangeLegalStatus,
   profile, onChangeProfile, selectedCategories, onChangeProductCategories}) => {
 
-  const [productCategories, setProductCategories] = useState<ProductCategory[]>([]);
-  const [profiles, setProfiles] =  useState<CardProfile[]>([]);
-
-  useEffect(() => {
-    getProfileByType(setProfiles, 'fournisseur')
-  }, [])
-
-  
-  const categoriesOptions = productCategories.map((category) => ({
-    value: category.id,
-    label: category.name,
-  }))
-
-
-
-  useEffect(()=>{
-    productCategories.forEach((category) => {
-      categoriesID.add(category.id)
-    })
-  }, [productCategories])
-
-  useMemo(() => {
-    getProductsCategories(setProductCategories)
-  }, [])
-
-  const selected = profiles.find(p => typeof profile != 'number' ? p.title == profile.title : p.id == profile)
-
   return (
     <>
-      <div className="mt-5">
-        <Card
-          style={{
-            height: 250,
-            color: "#fff",
-            backgroundImage: `url('/${selected?.title.toLowerCase() ?? 'dax'}.jpg')`,
-            backgroundSize: "cover"
-          }}
-          hoverable
-        >
-  
-            <br />
-            <Flex justify="center" align="center" vertical className="mt-20">
-              <Title level={3} style={{color: "#fff",}}>2035MAX-6790-1MA</Title>
-            </Flex>
-        </Card>
-      </div>
-
-      <div className="mt-5 mb-5">
-        <label>Quel Profil pour votre compte ?</label>
-        <Radio.Group onChange={onChangeProfile} value={selected?.id} id="profile" name="profile">
-          {
-            profiles.map(card => (
-                <Radio key={card.id} value={card.id}>Carte {card.title}</Radio>
-            ))
-          }
-        </Radio.Group>
-      </div>
-
+      <SelectProfileMemo value={profile} onChange={onChangeProfile} />
       <div className="mt-5 mb-5">
         <label className="block text-sm font-medium leading-6 text-gray-900 mt-2">Forme juridique</label>
         <Select
@@ -171,20 +116,7 @@ const ProfileInfoForm = ({rccm, onChangeRccm, tax, onChangeTax, nationalId, onCh
       <Input labelText="Numéro d’impôt" name="taxID" type="text" value={tax} onChange={onChangeTax} autoComplete="off" />
       
       <label className="block text-sm font-medium leading-6 text-gray-900 mt-2">Catégorie des produits</label>
-      <Select
-        mode="multiple"
-        className="mb-2"
-        onChange={onChangeProductCategories}
-        style={{
-          width: '100%',
-        }}
-        options={categoriesOptions}
-        notFoundContent={
-          <div>Aucune catégorie trouvée</div>
-        }
-        aria-readonly
-        value={selectedCategories}
-      />
+      <CategoriesMemo onChange={onChangeProductCategories} value={selectedCategories} />
 
       <Dragger {...props}>
         <p className="ant-upload-drag-icon">
@@ -200,6 +132,121 @@ const ProfileInfoForm = ({rccm, onChangeRccm, tax, onChangeTax, nationalId, onCh
     </>
   )
 }
+
+const SelectProfileMemo = memo(function SelectProfile({onChange, value}) {
+  const [profiles, setProfiles] =  useState<CardProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const selected = profiles.find(profile => typeof value != 'number' ? profile.title == value.title : profile.id == value)
+
+  
+  useEffect(() => {
+    const cachedData = sessionStorage.getItem('supplier-profile-card');
+    if (cachedData) {
+      setProfiles(JSON.parse(cachedData));
+      setLoading(false);
+    } else {
+      getProfileByType('fournisseur')
+        .then((data) => {
+          sessionStorage.setItem('supplier-profile-card', JSON.stringify(data));
+          setProfiles(data);
+          setLoading(false);
+        })
+        .catch((error) => {
+          setError(error);
+          setLoading(false);
+        });
+    }
+  }, [])
+
+
+  return <>
+    <div className="mt-5">
+      <Card
+        style={{
+          height: 250,
+          color: "#fff",
+          backgroundImage: `url('/${selected?.title.toLowerCase() ?? 'dax'}.jpg')`,
+          backgroundSize: "cover"
+        }}
+        hoverable
+      >
+
+          <br />
+          <Flex justify="center" align="center" vertical className="mt-20">
+            <Title level={3} style={{color: "#fff",}}>2035MAX-6790-1MA</Title>
+          </Flex>
+      </Card>
+    </div>
+    
+    
+    <div className="mt-5 mb-5">
+        <label>Quel Profil pour votre compte ?</label>
+        <Radio.Group onChange={onChange} value={selected?.id} id="profile" name="profile">
+          {
+            profiles.map(card => (
+                <Radio key={card.id} value={card.id}>Carte {card.title}</Radio>
+            ))
+          }
+        </Radio.Group>
+      </div>
+  </>
+})
+
+const CategoriesMemo = memo(function SelectCategories({onChange, value}) {
+  
+  const [productCategories, setProductCategories] = useState<ProductCategory[]>([]); 
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null); 
+  
+  const options = productCategories.map((category) => ({
+    value: category.id,
+    label: category.name,
+  }))
+
+  useEffect(() => {
+    const cachedData = sessionStorage.getItem('product-categories');
+    if (cachedData) {
+      setProductCategories(JSON.parse(cachedData));
+      setLoading(false);
+    } else {
+      getProductsCategories()
+        .then((data:ProductCategory[]) => {
+          sessionStorage.setItem('product-categories', JSON.stringify(data));
+          setProductCategories(data);
+          setLoading(false);
+        })
+        .catch((error) => {
+          setError(error);
+          setLoading(false);
+        });
+    }
+  }, []);
+
+
+  useEffect(()=>{
+    productCategories.forEach((category) => {
+      categoriesID.add(category.id)
+    })
+  }, [productCategories])
+
+
+  return <Select
+      mode="multiple"
+      className="mb-2"
+      onChange={onChange}
+      style={{
+        width: '100%',
+      }}
+      options={options}
+      notFoundContent={
+        <div>Aucune catégorie trouvée</div>
+      }
+      aria-readonly
+      value={value}
+    />
+})
 
 const AccountInfoForm = ({email, onChangeEmail, passwod, onChangePasswod, confirm, onChangeConfirm}) => {
   return (
@@ -238,29 +285,33 @@ const RegisterForm = () => {
   });
 
   const handleChange = (e) => {
-
-    let isLegalStatus = false
-    let isCategories = false
-
-    const hasTargetProperty :boolean = Object.hasOwn(e, 'target')
-
-    if(!hasTargetProperty) {
-      isLegalStatus = legalStatusOptions.some((option, index) => option.value == e)
-      
-      isCategories = categoriesID.has(parseInt(e))
-    }
-
     setFormData({
       ...formData,
-      [hasTargetProperty ? 
-        e.target.name : 
-        isLegalStatus ? 'legalStatus' : 
-        isCategories ? 'categories':
-        'country'
-      ]: hasTargetProperty ? e.target.value : e,     
-      'username': `${formData.name}.${formData.legalStatus}`
+      [e.target.name]: e.target.value,     
+      'username': `${formData.name}`
     });
   };
+
+  const handleCategoriesChange = useCallback((e: Array<number>) => {
+    setFormData({
+      ...formData,
+      'categories': e
+     });
+  }, [formData])
+
+  const handleCountryChange = (e: string) => {
+    setFormData({
+      ...formData,
+      'country': e
+     });
+  }
+
+  const handleLegalStatusChange = (e: string) => {
+    setFormData({
+      ...formData,
+      'legalStatus': e
+     });
+  }
 
   const [confirm, setConfirm] = useState("")
   const onChangeConfirm = (e) => setConfirm(e.target.value)
@@ -269,7 +320,7 @@ const RegisterForm = () => {
     {
       title: 'Général',
       content: <GeneralInfoForm 
-          country={formData.country} onChangeCountry={handleChange}
+          country={formData.country} onChangeCountry={handleCountryChange}
           name={formData.name} onChangeName={handleChange}
           address={formData.address} onChangeAddress={handleChange}
           phone={formData.phone} onChangePhone={handleChange}
@@ -280,11 +331,11 @@ const RegisterForm = () => {
       title: 'Choix du profil',
       content: <ProfileInfoForm 
         profile={formData.profile} onChangeProfile={handleChange}
-        legalStatus={formData.legalStatus} onChangeLegalStatus={handleChange}
+        legalStatus={formData.legalStatus} onChangeLegalStatus={handleLegalStatusChange}
         rccm={formData.businessRegister} onChangeRccm={handleChange}
         nationalId={formData.nationalID} onChangenationalId={handleChange}
         tax={formData.taxID} onChangeTax={handleChange}
-        selectedCategories={formData.categories} onChangeProductCategories={handleChange}
+        selectedCategories={formData.categories} onChangeProductCategories={handleCategoriesChange}
       />
     },
 
