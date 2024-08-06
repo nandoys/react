@@ -1,6 +1,5 @@
 {
   "/fournisseur/page": "app/fournisseur/page.js",
   "/page": "app/page.js",
-  "/fournisseur/icon.png/route": "app/fournisseur/icon.png/route.js",
-  "/icon.png/route": "app/icon.png/route.js"
+  "/fournisseur/icon.png/route": "app/fournisseur/icon.png/route.js"
 }

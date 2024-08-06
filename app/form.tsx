@@ -10,7 +10,7 @@ const { Title } = Typography;
 import { Input } from "./components/input";
 import { Stepper } from "./components/stepper";
 import { getProfileByType } from "./api/service";
-import { CardProfile, CreateCustomerForm } from "./types/interfaces";
+import { CardProfile, CreateCustomerFields } from "./types/interfaces";
 
 
 const PersonalInfoForm = ({
@@ -119,7 +119,7 @@ const AccountInfoForm = ({email, onChangeEmail, passwod, onChangePasswod, confir
 
 const RegisterForm = () => {
 
-  const [formData, setFormData] = useState<CreateCustomerForm>({    
+  const [formFields, setFormFields] = useState<CreateCustomerFields>({    
     firstname: '',
     lastname: '',
     username: '',
@@ -134,16 +134,16 @@ const RegisterForm = () => {
   });
   
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
+    setFormFields({
+      ...formFields,
       [e.target.name]: e.target.value,
-      'username': `${formData.email}`
+      'username': `${formFields.email}`
     });
   };
 
   const handleCountryChange = (e: string) => {
-    setFormData({
-      ...formData,
+    setFormFields({
+      ...formFields,
       'country': e
      });
   }
@@ -157,21 +157,23 @@ const RegisterForm = () => {
     {
       title: 'Infos personnelles',
       content: <PersonalInfoForm 
-          country={formData.country} onChangeCountry={handleCountryChange}
-          firstname={formData.firstname} onChangeFirstname={handleChange}
-          lastname={formData.lastname} onChangeLastname={handleChange}
-          phone={formData.phone} onChangePhone={handleChange}
+          country={formFields.country} onChangeCountry={handleCountryChange}
+          firstname={formFields.firstname} onChangeFirstname={handleChange}
+          lastname={formFields.lastname} onChangeLastname={handleChange}
+          phone={formFields.phone} onChangePhone={handleChange}
       />,
     },
+
     {
       title: 'Choix du profil',
-      content: <ProfileInfoForm profile={formData.profile} onChangeProfile={handleChange} />,
+      content: <ProfileInfoForm profile={formFields.profile} onChangeProfile={handleChange} />,
     },
+
     {
       title: 'Compte',
       content: <AccountInfoForm
-            email={formData.email} onChangeEmail={handleChange}
-            passwod={formData.password} onChangePasswod={handleChange}
+            email={formFields.email} onChangeEmail={handleChange}
+            passwod={formFields.password} onChangePasswod={handleChange}
             confirm={confirm} onChangeConfirm={onChangeConfirm}
        />,
     },
@@ -181,7 +183,7 @@ const RegisterForm = () => {
     <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
       <form className="space-y-1" action="#" method="POST">
 
-        <Stepper steps={steps} formData={formData} />
+        <Stepper steps={steps} formFields={formFields} role='customer' />
       </form>
     </div>
   )

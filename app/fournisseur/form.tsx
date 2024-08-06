@@ -1,21 +1,20 @@
 /* eslint-disable react/no-unescaped-entities */
 'use client'
 
-import React, { useState, useEffect, useMemo, useCallback, memo } from "react";
-import { Card, Radio, Select, Flex, Typography } from 'antd';
+import React, { useState, useEffect, useCallback, memo } from "react";
+import { Card, Radio, Select, Flex, Form, Typography, Input, Empty } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
-import type { UploadProps } from 'antd';
+import type { UploadFile, UploadProps } from 'antd';
 import { message, Upload } from 'antd';
-import ReactFlagsSelect from "react-flags-select";
+import ReactFlagsSelect, { Cd, Cg, Ng } from "react-flags-select";
 
 const { Title } = Typography;
 const { Dragger } = Upload;
 
-import { Input } from "../components/input";
 import { Stepper } from "../components/stepper";
 import { getProductsCategories, getProfileByType } from "../api/service";
 
-import { CardProfile, CreateSupplierForm, ProductCategory } from "../types/interfaces";
+import { CardProfile, CreateSupplierFields, ProductCategory } from "../types/interfaces";
 
 const legalStatusOptions = [
   {value: 'SA', label: 'SA'},
@@ -28,39 +27,6 @@ const legalStatusOptions = [
 
 let categoriesID = new Set<number>()
 
-const props: UploadProps = {
-  name: 'file',
-  accept: 'image/png, image/jpeg, image/jpg, application/pdf',
-  maxCount: 3,
-  multiple: true,
-  locale: {
-    uploadError: "Erreur de chargement",
-    removeFile: "Retirer"
-  },
-  //action: 'https://660d2bd96ddfa2943b33731c.mockapi.io/api/upload',
-  onChange(info) {
-    const { status } = info.file;
-    if (status === 'done') {
-      message.success(`${info.file.name} chargement réussi.`);
-    } else if (status === 'error') {
-      message.error(`${info.file.name} chargement échoué.`);
-    }
-  },
-  onDrop(e) {
-    const file = e.dataTransfer.files[0]
-    const accept = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf']
-    if(!accept.some((format, index) => format == file.type)) {
-      message.error(`${file.name} format invalide.`);
-    }
-  },
-  beforeUpload(file, fileList) {
-    if((file.size / 1048576) >= 5) {
-      message.error(`${file.name} fichier volumineux.`);
-      return Upload.LIST_IGNORE
-    }
-  },
-};
-
 
 const GeneralInfoForm = ({
   country, onChangeCountry, name, onChangeName, address, onChangeAddress, phone, onChangePhone
@@ -68,67 +34,103 @@ const GeneralInfoForm = ({
   
   return (
     <>
-      <Input labelText="Nom de votre entreprise" name="name" type="text" value={name} onChange={onChangeName} autoComplete="off" />
+      <Form.Item
+        rules={[
+          { required: true, message: 'Veuillez entrer le nom de votre entreprise' }
+        ]}
+        name={"name"}
+        label={"Nom de votre entreprise"
+        }
+      >
+        <Input />
+      </Form.Item>
 
-      <div>
-          <label htmlFor="rfs-btn" className="block text-sm font-medium leading-6 text-gray-900">
-            Votre pays d'opération
-          </label>
-      
-        <ReactFlagsSelect
-          selected={country}
-          onSelect={onChangeCountry}
+      <Form.Item
+        name={"country"}
+        label="Votre pays d'opération"
+        rules={[
+          {required: true, message: "Veuillez choisir votre pays"}
+        ]}
+      >
+        <Select 
+          options={[
+            {label: <div><Cg fontSize={18} style={{display: 'inline-block'}} /> Rep Congo</div>, value: 'Rép. Congo'},
+            {label: <div><Cd fontSize={18} style={{display: 'inline-block'}} /> RD Congo</div>, value: 'Rép. Dém. Congo'},
+            {label: <div><Ng fontSize={18} style={{display: 'inline-block'}} /> Nigeria</div>, value: 'Nigeria'},
+          ]}
           placeholder="Choisissez votre pays"
-          searchPlaceholder="Recherche..."
-          searchable
-          showSecondarySelectedLabel
-          id="country"
+          showSearch
+          notFoundContent={
+          <div>
+            <Empty description="Aucun pays disponible"  /> 
+          </div>}
         />
-      </div>
-      <Input labelText="Adresse physique" name="address" type="text" value={address} onChange={onChangeAddress} autoComplete="street-address" />
-      <Input labelText="Numéro de téléphone" name="phone" type="text" value={phone} onChange={onChangePhone} autoComplete="tel" />
+      </Form.Item>
+
+      <Form.Item
+        rules={[
+          { required: true, message: "Veuillez entrer votre adresse physique" }
+        ]}
+        name={"address"}
+        label={"Adresse physique"}
+      >
+        <Input />
+      </Form.Item>
+
+      <Form.Item
+        rules={[
+          { required: true, message: 'Veuillez entrer votre numéro de téléphone' }
+        ]}
+        name={"phone"}
+        label={"Numéro de téléphone"}
+      >
+        <Input />
+      </Form.Item>
     </>
   )
 }
 
 
 const ProfileInfoForm = ({rccm, onChangeRccm, tax, onChangeTax, nationalId, onChangenationalId, legalStatus, onChangeLegalStatus,
-  profile, onChangeProfile, selectedCategories, onChangeProductCategories}) => {
+  profile, onChangeProfile, selectedCategories, onChangeProductCategories, files, onChangeFiles}) => {
 
   return (
     <>
-      <SelectProfileMemo value={profile} onChange={onChangeProfile} />
-      <div className="mt-5 mb-5">
-        <label className="block text-sm font-medium leading-6 text-gray-900 mt-2">Forme juridique</label>
-        <Select
-            //defaultValue="SA"
-            value={legalStatus}
-            style={{
-              width: "100%",
-            }}
-            onChange={onChangeLegalStatus}
-            options={legalStatusOptions}
-        />
-      </div>
+      <Form.Item>
+        <SelectProfileMemo value={profile} onChange={onChangeProfile} />
+      </Form.Item>
 
-      <Input labelText="Numéro de RCCM" name="businessRegister" type="text" value={rccm} onChange={onChangeRccm} autoComplete="off" />
-      <Input labelText="Numéro d’identification Nationale" name="nationalID" type="text" value={nationalId} onChange={onChangenationalId} autoComplete="off" />
-      <Input labelText="Numéro d’impôt" name="taxID" type="text" value={tax} onChange={onChangeTax} autoComplete="off" />
+      <Form.Item>
+        <div className="mt-5 mb-5">
+          <label className="block text-sm font-medium leading-6 text-gray-900 mt-2">Forme juridique</label>
+          <Select
+              //defaultValue="SA"
+              value={legalStatus}
+              style={{
+                width: "100%",
+              }}
+              onChange={onChangeLegalStatus}
+              options={legalStatusOptions}
+          />
+        </div>
+      </Form.Item>
       
-      <label className="block text-sm font-medium leading-6 text-gray-900 mt-2">Catégorie des produits</label>
-      <CategoriesMemo onChange={onChangeProductCategories} value={selectedCategories} />
-
-      <Dragger {...props}>
-        <p className="ant-upload-drag-icon">
-          <InboxOutlined />
-        </p>
-        <p className="ant-upload-text">Cliquer ou déposer des fichiers dans cette zone</p>
-        <p className="ant-upload-hint">
-          Vous pouvez selectionner un ou plusieurs fichiers au format : PDF | JPG | JPEG  |PNG
-          <br />Taille Maximal: 5Mo
-        </p>
-      </Dragger>
-      
+      <Form.Item>
+        <Input labelText="Numéro de RCCM" name="businessRegister" type="text" value={rccm} onChange={onChangeRccm} autoComplete="off" />
+      </Form.Item>
+      <Form.Item>
+        <Input labelText="Numéro d’identification Nationale" name="nationalID" type="text" value={nationalId} onChange={onChangenationalId} autoComplete="off" />
+      </Form.Item>
+      <Form.Item>
+        <Input labelText="Numéro d’impôt" name="taxID" type="text" value={tax} onChange={onChangeTax} autoComplete="off" />
+      </Form.Item>
+      <Form.Item>
+      < label className="block text-sm font-medium leading-6 text-gray-900 mt-2">Catégorie des produits</label>
+        <CategoriesMemo onChange={onChangeProductCategories} value={selectedCategories} />
+      </Form.Item>
+      <Form.Item>
+        <FileUpload files={files} onChangeFiles={onChangeFiles} />
+      </Form.Item>
     </>
   )
 }
@@ -248,12 +250,80 @@ const CategoriesMemo = memo(function SelectCategories({onChange, value}) {
     />
 })
 
+const FileUpload = ({files, onChangeFiles}) => {  
+  const props: UploadProps = {
+    name: 'file',
+    accept: 'image/png, image/jpeg, image/jpg, application/pdf',
+    maxCount: 3,
+    multiple: true,
+    locale: {
+      uploadError: "Erreur de chargement",
+      removeFile: "Retirer"
+    },
+    fileList: files,
+    //action: 'https://660d2bd96ddfa2943b33731c.mockapi.io/api/upload',
+    onChange(info) {
+      const { status } = info.file;
+
+      if (status === 'done') {
+        message.success(`${info.file.name} chargement réussi.`);
+      } else if (status === 'error') {
+        message.error(`${info.file.name} chargement échoué.`);
+      }
+    },
+    onDrop(e) {
+      const file = e.dataTransfer.files[0]
+      const accept = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf']
+      if(!accept.some((format, index) => format == file.type)) {
+        message.error(`${file.name} format invalide.`);
+      }
+    },
+    beforeUpload(file) {
+      if((file.size / 1048576) >= 5) {
+        message.error(`${file.name} fichier volumineux.`);
+        return Upload.LIST_IGNORE
+      }
+      if(files.length == 3) {
+        message.error(`Nombre maximal de fichier atteint`);
+        return Upload.LIST_IGNORE
+      }
+      files.push(file)
+      onChangeFiles(files);
+    },
+    onRemove: file => {
+      onChangeFiles(files.filter(f => f.uid !== file.uid));
+    },
+  };
+
+  return <Dragger 
+    {...props}
+    name="files"
+  >
+    <p className="ant-upload-drag-icon">
+      <InboxOutlined />
+    </p>
+    <p className="ant-upload-text">Cliquer ou déposer des fichiers dans cette zone</p>
+    <p className="ant-upload-hint">
+      Vous pouvez selectionner un ou plusieurs fichiers au format : PDF | JPG | JPEG  |PNG
+      <br />Taille Maximal: 5Mo
+    </p>
+  </Dragger>
+}
+
 const AccountInfoForm = ({email, onChangeEmail, passwod, onChangePasswod, confirm, onChangeConfirm}) => {
   return (
     <>
-      <Input labelText="Adresse Email" name="email" type="email" value={email} onChange={onChangeEmail} autoComplete="email" />
-      <Input labelText="Mot de passe" name="password" type="password" value={passwod} onChange={onChangePasswod} autoComplete="new-password" />
-      <Input labelText="Confirmer mot de passe" name="confirmPassword" type="password" value={confirm} onChange={onChangeConfirm} autoComplete="new-password" />
+      <Form.Item>
+        <Input labelText="Adresse Email" name="email" type="email" value={email} onChange={onChangeEmail} autoComplete="email" />
+      </Form.Item>
+
+      <Form.Item>
+        <Input labelText="Mot de passe" name="password" type="password" value={passwod} onChange={onChangePasswod} autoComplete="new-password" />
+      </Form.Item>
+
+      <Form.Item>
+        <Input labelText="Confirmer mot de passe" name="confirmPassword" type="password" value={confirm} onChange={onChangeConfirm} autoComplete="new-password" />
+      </Form.Item>
     </>
   )
 }
@@ -265,7 +335,7 @@ const RegisterForm = () => {
       console.log(e, 'here i\'m!!!')
   }
 
-  const [formData, setFormData] = useState<CreateSupplierForm>({    
+  const [formFields, setFormFields] = useState<CreateSupplierFields>({    
     name: '',
     username: '',
     country: '',
@@ -275,6 +345,7 @@ const RegisterForm = () => {
       id: 5503, // to change
       title: 'DAX'
     },
+    files: [],
     legalStatus: '',
     businessRegister: '',
     nationalID: '',
@@ -285,65 +356,75 @@ const RegisterForm = () => {
   });
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
+    setFormFields({
+      ...formFields,
       [e.target.name]: e.target.value,     
-      'username': `${formData.name}`
+      'username': `${formFields.name}`
     });
   };
 
   const handleCategoriesChange = useCallback((e: Array<number>) => {
-    setFormData({
-      ...formData,
+    setFormFields({
+      ...formFields,
       'categories': e
      });
-  }, [formData])
+  }, [formFields])
 
   const handleCountryChange = (e: string) => {
-    setFormData({
-      ...formData,
+    setFormFields({
+      ...formFields,
       'country': e
      });
   }
 
+  const handleFilesChange = (e) => {
+    setFormFields({
+      ...formFields,
+      'files': [...e]
+     });
+  }
+
   const handleLegalStatusChange = (e: string) => {
-    setFormData({
-      ...formData,
+    setFormFields({
+      ...formFields,
       'legalStatus': e
      });
   }
 
   const [confirm, setConfirm] = useState("")
   const onChangeConfirm = (e) => setConfirm(e.target.value)
+
+  const [form] = Form.useForm()
  
   const steps = [
     {
       title: 'Général',
       content: <GeneralInfoForm 
-          country={formData.country} onChangeCountry={handleCountryChange}
-          name={formData.name} onChangeName={handleChange}
-          address={formData.address} onChangeAddress={handleChange}
-          phone={formData.phone} onChangePhone={handleChange}
+          country={formFields.country} onChangeCountry={handleCountryChange}
+          name={formFields.name} onChangeName={handleChange}
+          address={formFields.address} onChangeAddress={handleChange}
+          phone={formFields.phone} onChangePhone={handleChange}
       />,
     },
 
     {
       title: 'Choix du profil',
       content: <ProfileInfoForm 
-        profile={formData.profile} onChangeProfile={handleChange}
-        legalStatus={formData.legalStatus} onChangeLegalStatus={handleLegalStatusChange}
-        rccm={formData.businessRegister} onChangeRccm={handleChange}
-        nationalId={formData.nationalID} onChangenationalId={handleChange}
-        tax={formData.taxID} onChangeTax={handleChange}
-        selectedCategories={formData.categories} onChangeProductCategories={handleCategoriesChange}
+        profile={formFields.profile} onChangeProfile={handleChange}
+        legalStatus={formFields.legalStatus} onChangeLegalStatus={handleLegalStatusChange}
+        rccm={formFields.businessRegister} onChangeRccm={handleChange}
+        nationalId={formFields.nationalID} onChangenationalId={handleChange}
+        tax={formFields.taxID} onChangeTax={handleChange}
+        selectedCategories={formFields.categories} onChangeProductCategories={handleCategoriesChange}
+        files={formFields.files} onChangeFiles={handleFilesChange}
       />
     },
 
     {
       title: 'Compte',
       content: <AccountInfoForm
-            email={formData.email} onChangeEmail={handleChange}
-            passwod={formData.password} onChangePasswod={handleChange}
+            email={formFields.email} onChangeEmail={handleChange}
+            passwod={formFields.password} onChangePasswod={handleChange}
             confirm={confirm} onChangeConfirm={onChangeConfirm}
        />,
     },
@@ -354,10 +435,14 @@ const RegisterForm = () => {
 
   return (
       <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-        <form className="space-y-1" action="#" method="POST">
+        <Form 
+          form={form}
+          scrollToFirstError={true}
+          layout="vertical"
+        >
 
-          <Stepper steps={steps} formData={formData} />
-        </form>
+          <Stepper steps={steps} formController={form} formFields={formFields} role="supplier" />
+        </Form>
       </div>
   )
 }

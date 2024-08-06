@@ -1,10 +1,12 @@
+import { UploadFile } from "antd"
+
 export interface CardProfile {
     id: number,
     title: string,
   }
   
   
-export  interface CreateCustomerForm {
+export  interface CreateCustomerFields {
     firstname: string,
     lastname: string,
     username: string,
@@ -15,13 +17,14 @@ export  interface CreateCustomerForm {
     password: string
   }
 
-export  interface CreateSupplierForm {
+export  interface CreateSupplierFields {
     name: string,
     username: string,
     country: string,
     address: string,
     phone: string,
     profile: CardProfile,
+    files: UploadFile[],
     email: string,
     password: string,
     legalStatus: string,

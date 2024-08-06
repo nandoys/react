@@ -6,10 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-     "node": "node server.js",
+    "node": "node server.js",
     "lint": "next lint"
   },
   "dependencies": {
+    "@ant-design/nextjs-registry": "^1.0.0",
     "antd": "^5.19.1",
     "express": "^4.19.2",
     "next": "14.2.4",

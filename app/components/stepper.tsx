@@ -1,16 +1,20 @@
 'use client'
 
 import React, { useState } from 'react';
-import { Button, message, Steps, theme } from 'antd';
-import { createCustomerApi } from '../api/endpoints';
+import { Button, FormInstance, message, Steps, theme } from 'antd';
+import { createCustomerApi, createSupplierApi } from '../api/endpoints';
 
 
-const Stepper = ({steps, formData}) => {
+const Stepper = ({steps, formController, formFields, role}: {steps:Array<any>, formController:FormInstance, formFields:any, role:string }) => {
   const { token } = theme.useToken();
   const [current, setCurrent] = useState(0);
   
   const next = () => {
-    setCurrent(current + 1);
+
+    formController.validateFields().then(()=> {
+      setCurrent(current + 1);
+    }).catch((info) => console.log(info))
+    
   };
 
   const prev = () => {
@@ -18,23 +22,34 @@ const Stepper = ({steps, formData}) => {
   };
 
   const done = async () => {
-    console.log(formData)
+    const formData = new FormData();
+    for (const key in formFields) {
+      formData.append(key, formFields[key]);
+    }
+
     message.success('Inscription terminée!')
-    /*
+  
     try {
-      const response = await fetch(createCustomerApi, {
+      const username = process.env.USERNAME_AUTH_KEY;
+      const password = process.env.PWD_AUTH_KEY;
+  
+      // Encoder les informations d'authentification en Base64
+      const encodedCredentials = btoa(`${username}:${password}`);
+
+      const response = await fetch(role =='customer' ? createCustomerApi : createSupplierApi, {
         method: 'POST',
+        body: formData,
         headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+          'Authorization': `Basic ${encodedCredentials}`,
+        }
       });
+
       const result = await response.json();
       console.log('Success:', result);
     } catch (error) {
       console.error('Error:', error);
     }
-    */
+  
   }
 
   const items = steps.map((item) => ({
