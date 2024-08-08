@@ -8,6 +8,7 @@ import { createCustomerApi, createSupplierApi } from '../api/endpoints';
 const Stepper = ({steps, formController, role}: {steps:Array<any>, formController:FormInstance, role:string }) => {
   const { token } = theme.useToken();
   const [current, setCurrent] = useState(0);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({});
 
   
@@ -28,45 +29,46 @@ const Stepper = ({steps, formController, role}: {steps:Array<any>, formControlle
 
     formController
     .validateFields()
-    .then((values) => {
-      const finalData = { ...formData, ...values };
+    .then(async (values) => {
+      setLoading(true)
+
+      const finalData = { ...formData, ...values, 'username': values["email"] };
 
       // Create a FormData object to handle file uploads
       const formDataToSend = new FormData();
       Object.keys(finalData).forEach(key => {
-        if (key === 'files') {
+        if (key === 'async-upload') {
           finalData[key].forEach((file: any) => {
             formDataToSend.append(key, file.originFileObj);
           });
         } else {
           formDataToSend.append(key, finalData[key]);
         }
-    });
+      });
 
-    //formDataToSend.forEach(item => console.log(item))
-    // message.success('Inscription terminée!')
-  
-    // try {
-    //   const username = process.env.USERNAME_AUTH_KEY;
-    //   const password = process.env.PWD_AUTH_KEY;
-  
-    //   // Encoder les informations d'authentification en Base64
-    //   const encodedCredentials = btoa(`${username}:${password}`);
+      try {
+        const username = process.env.USERNAME_AUTH_KEY;
+        const password = process.env.PWD_AUTH_KEY;
+    
+        // Encoder les informations d'authentification en Base64
+        const encodedCredentials = btoa(`${username}:${password}`);
 
-    //   const response = await fetch(role =='customer' ? createCustomerApi : createSupplierApi, {
-    //     method: 'POST',
-    //     body: formData,
-    //     headers: {
-    //       'Authorization': `Basic ${encodedCredentials}`,
-    //       'Content-Type': 'multipart/form-data',
-    //     }
-    //   });
+        const response = await fetch(role =='customer' ? createCustomerApi : createSupplierApi, {
+          method: 'POST',
+          body: formDataToSend,
+          headers: {
+            'Authorization': `Basic ${encodedCredentials}`,
+            'Content-Type': 'multipart/form-data',
+          }
+        });
 
-    //   const result = await response.json();
-    //   console.log('Success:', result);
-    // } catch (error) {
-    //   console.error('Error:', error);
-    // }
+        const result = await response.json();
+        setLoading(false)
+        console.log('Success:', result);
+      } catch (error) {
+        message.error("Echec de l'inscription!!")
+        setLoading(false)
+      }
   
     })
   }
@@ -92,6 +94,7 @@ const Stepper = ({steps, formController, role}: {steps:Array<any>, formControlle
               margin: '0 8px',
             }}
             onClick={() => prev()}
+            disabled={loading}
           >
             Précédent
           </Button>
@@ -104,7 +107,7 @@ const Stepper = ({steps, formController, role}: {steps:Array<any>, formControlle
         )}
 
         {current === steps.length - 1 && (
-          <Button type="primary" onClick={done}> 
+          <Button type="primary" onClick={done} loading={loading}> 
             Terminer
           </Button>
         )}

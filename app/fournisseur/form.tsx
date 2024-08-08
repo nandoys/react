@@ -25,9 +25,6 @@ const legalStatusOptions = [
   {value: 'PERSONNE PHYSIQUE', label: 'PERSONNES PHYSIQUES AVEC N° d’IMPÔTS'},
 ]
 
-let categoriesID = new Set<number>()
-
-
 const GeneralInfoForm = () => {
 
   return (
@@ -246,19 +243,10 @@ const CategoriesMemo = function SelectCategories() {
     }
   }, []);
 
-
-  useEffect(()=>{
-    /*
-    productCategories.forEach((category) => {
-      categoriesID.add(category.id)
-    })
-      */
-  }, [productCategories])
-
   const options = productCategories.length > 0 ? productCategories.map((category) => ({
     value: category.id,
     label: category.name,
-  })) : [g]
+  })) : []
 
 
   return <>
@@ -335,7 +323,7 @@ const FileUpload = () => {
 
   return (
     <>
-      <Form.Item name={"files"} valuePropName="fileList" getValueFromEvent={normFile}
+      <Form.Item name={"async-upload"} valuePropName="fileList" getValueFromEvent={normFile}
         rules={[
           {required: true, message: "Veuillez ajouter vos documents"}
         ]}
@@ -349,7 +337,7 @@ const FileUpload = () => {
           <p className="ant-upload-drag-icon">
             <InboxOutlined />
           </p>
-          <p className="ant-upload-text">Cliquer ou déposer des fichiers dans cette zone</p>
+          <p className="ant-upload-text">Cliquer ou déposer votre RCCM, IDNAT et Numéro d'Impôt dans cette zone</p>
           <p className="ant-upload-hint">
             Vous pouvez selectionner un ou plusieurs fichiers au format : PDF | JPG | JPEG  |PNG
             <br />Taille Maximal: 5Mo
@@ -401,22 +389,6 @@ const AccountInfoForm = () => {
 
 
 const RegisterForm = () => {
-  const onSubmit = (e) => {
-      e.preventDefault()
-      console.log(e, 'here i\'m!!!')
-  }
-
-  const onFinish = (values: any) => {
-    message.success('Form submitted successfully');
-    console.log('Received values: ', values);
-  };
-
-  const onFinishFailed = (errorInfo: any) => {
-    console.log('Failed:', errorInfo);
-  };
-
-  const [confirm, setConfirm] = useState("")
-  const onChangeConfirm = (e) => setConfirm(e.target.value)
 
   const [form] = Form.useForm<CreateSupplierFields>()
 
@@ -437,9 +409,6 @@ const RegisterForm = () => {
     },
   ];
 
-
-
-
   return (
       <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
         <Form
@@ -448,8 +417,6 @@ const RegisterForm = () => {
           layout="vertical"
           autoComplete="off"
           requiredMark={false}
-          onFinish={onFinish}
-          onFinishFailed={onFinishFailed}
         >
           <Stepper steps={steps} formController={form} role="supplier" />
         </Form>
